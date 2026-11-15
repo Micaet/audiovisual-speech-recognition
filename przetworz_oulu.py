@@ -1,7 +1,7 @@
 """
-Przetwarza OuluVS (pliki AVI z wypakuj_oulu.py) na pliki .npz w tym samym formacie co LRW i MODALITY.
+Przetwarza OuluVS na pliki .npz.
 
-Dla każdego klipu (oulu\\avi\\P004\\Excuse1.avi):
+Dla każdego klipu:
   - wideo: ffmpeg usuwa przeplot (yadif) i poprawia proporcje pikseli PAL (720 -> 768 px), 25 kl./s,
     potem wycinek ust 96x96 (common_functions),
   - dźwięk: ffmpeg -> mono 16 kHz, filtr górnoprzepustowy 80 Hz, int16,
@@ -10,9 +10,6 @@ Dla każdego klipu (oulu\\avi\\P004\\Excuse1.avi):
     wykryto (T,), slowo ("Excuse me"), mowca ("P004"), zbior ("brak podziału"), zbior_danych ("OuluVS"),
     poczatek_slowa / koniec_slowa, label (0-9), powtorzenie, meta (json).
 
-Użycie (z folderu Dane, w środowisku avsr):
-    python przetworz_oulu.py --avi oulu\\avi --out oulu_npz
-Gotowe pliki i klipy z oulu_npz\\nieudane.txt są pomijane, więc można przerwać i uruchomić ponownie.
 Wymagania: ffmpeg w PATH, numpy, opencv-python, "mediapipe==0.10.14".
 """
 import argparse
@@ -24,10 +21,10 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import common_functions as cf   # noqa: E402
+import common_functions as cf  
 
-W, H = 768, 576                     # 720x576 PAL z pikselem 1.067:1 -> kwadratowe piksele
-FRAZY = {  # nazwa pliku w OuluVS -> (indeks klasy, tekst frazy)
+W, H = 768, 576                     
+FRAZY = { 
     "Excuse": (0, "Excuse me"), "Goodby": (1, "Goodbye"), "Hello": (2, "Hello"),
     "How": (3, "How are you"), "Nice": (4, "Nice to meet you"), "Seeyou": (5, "See you"),
     "Sorry": (6, "I am sorry"), "Thank": (7, "Thank you"), "Time": (8, "Have a good time"),
