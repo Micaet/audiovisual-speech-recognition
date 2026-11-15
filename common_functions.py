@@ -1,7 +1,6 @@
 """
 Funkcje wspólne dla przetworz_lrw.py, przetworz_modality.py i przetworz_oulu.py.
-Jedna kopia = wszystkie zbiory są wycinane i zapisywane dokładnie tak samo, co jest warunkiem
-testowania na jednym zbiorze modelu uczonego na drugim. Skrypty robią `import common_functions as cf`.
+
 """
 import json
 import multiprocessing as mp
@@ -21,16 +20,15 @@ LIPS = None                   # detektor twarzy, tworzony przez init_lips() w ka
 
 
 class Lips:
-    """MediaPipe Face Mesh: 468 punktów twarzy w każdej klatce (współrzędne w pikselach)."""
+    """MediaPipe Face Mesh: 468 punktów twarzy w każdej klatce ."""
 
     def __init__(self):
         import mediapipe as mpipe
-        self.idx = sorted({i for e in mpipe.solutions.face_mesh.FACEMESH_LIPS for i in e})   # 40 punktów ust
+        self.idx = sorted({i for e in mpipe.solutions.face_mesh.FACEMESH_LIPS for i in e})   
         self.fm = mpipe.solutions.face_mesh.FaceMesh(static_image_mode=False, max_num_faces=1,
                                                      refine_landmarks=False)
 
     def reset(self, shape):
-        """Czarna klatka: MediaPipe gubi śledzoną twarz i w następnym klipie szuka jej od nowa."""
         self.fm.process(np.zeros(shape, np.uint8))
 
     def __call__(self, frame):
@@ -47,7 +45,7 @@ def init_lips():
     global LIPS
     import os
     import warnings
-    warnings.filterwarnings("ignore")                 # ostrzeżenia protobuf/MediaPipe z każdego procesu
+    warnings.filterwarnings("ignore")                 
     os.environ.setdefault("GLOG_minloglevel", "2")
     os.environ.setdefault("TF_CPP_MIN_LOG_LEVEL", "3")
     cv2.setNumThreads(1)
@@ -94,8 +92,6 @@ def crop_mouth(frames_rgb, pts, lip_idx, scale):
         g = cv2.cvtColor(fr, cv2.COLOR_RGB2GRAY)
         h, w = g.shape
         g = np.pad(g, half, mode="edge")
-        # środek w granicach obrazu (MediaPipe potrafi zwrócić punkty poza kadrem);
-        # po dopełnieniu o `half` róg wycinka wypada dokładnie w (x0, y0)
         x0, y0 = int(round(min(max(cx, 0), w - 1))), int(round(min(max(cy, 0), h - 1)))
         patch = g[y0:y0 + side, x0:x0 + side]
         out[t] = cv2.resize(patch, (ROI, ROI), interpolation=cv2.INTER_AREA)
@@ -140,9 +136,6 @@ def zapisz(path, meta, **dane):
     np.savez_compressed(tmp, **dane, meta=json.dumps(meta, ensure_ascii=False))
     tmp.replace(path)
 
-
-# ---------- przetwarzanie listy klipów (LRW, Oulu) ----------
-
 def nieudane(out):
     """Klipy z nieudane.txt - przy kolejnych uruchomieniach są pomijane."""
     f = Path(out) / "nieudane.txt"
@@ -159,8 +152,6 @@ def _bezpiecznie(fn_job):
 
 
 def uruchom(fn, jobs, out, procesy=1):
-    """Wykonuje fn(job) dla każdego klipu (job[0] = plik źródłowy); fn zwraca None albo opis problemu,
-    który trafia do nieudane.txt. Przerwanie (Ctrl+C) jest bezpieczne: gotowe pliki zostają."""
     print(f"Do zrobienia: {len(jobs)} klipów, procesów: {procesy}", flush=True)
     if not jobs:
         return

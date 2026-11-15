@@ -1,7 +1,6 @@
 """
-Wypakowuje z zaszyfrowanego A_16-12062006.zip (OuluVS) tylko małe pliki AVI pojedynczych wypowiedzi
-(wideo + dźwięk), bez klatek BMP, bez nagrań całej sesji i bez ruchów głowy (Left/Right).
-Zamiast 29 GB wychodzi niecały 1 GB dla 20 osób. Hasło jest pytane w terminalu i nigdzie nie jest zapisywane.
+Wypakowuje z zaszyfrowanego zipa tylko małe pliki AVI pojedynczych wypowiedzi
+(wideo + dźwięk).
 
 Użycie:
     python wypakuj_oulu.py --dane FOLDER_Z_ZIPEM --out oulu
@@ -15,7 +14,7 @@ import zipfile
 from pathlib import Path
 
 ZIP_A = "A_16-12062006.zip"
-RE_AVI = re.compile(r"^[^/]+/(P\d{3})/([A-Za-z]+)(\d+)/\2\3\.avi$", re.IGNORECASE)   # A_16-.../P004/Hello1/Hello1.avi
+RE_AVI = re.compile(r"^[^/]+/(P\d{3})/([A-Za-z]+)(\d+)/\2\3\.avi$", re.IGNORECASE)  
 
 
 def main():
@@ -27,7 +26,7 @@ def main():
     out = (Path(args.out) if args.out else Path(args.dane) / "oulu") / "avi"
     pwd = getpass.getpass("Hasło do ZIP-ów OuluVS: ").encode()
     with zipfile.ZipFile(Path(args.dane) / ZIP_A) as zf:
-        try:                                          # sprawdzenie hasła na pierwszym pliku
+        try:                            
             with zf.open(next(i for i in zf.infolist() if not i.is_dir()), pwd=pwd) as f:
                 f.read(1024)
         except RuntimeError as e:

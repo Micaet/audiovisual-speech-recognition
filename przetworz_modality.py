@@ -1,7 +1,7 @@
 """
-Przetwarza ZIP-y MODALITY (sesje C) na pliki .npz: jeden plik na słowo.
+Przetwarza ZIP-y MODALITY na pliki .npz: jeden plik na słowo.
 
-Dla każdego ZIP-a (np. SPEAKER14_C1.zip):
+Dla każdego ZIP-a :
   - granice słów z pliku .lab (czas w jednostkach 100 ns) + margines 0,6 s z każdej strony,
   - dźwięk prosto z ZIP-a: mikrofon AUD1 (50 cm od mówcy) i mikrofon laptopa, filtr 80 Hz, mono 16 kHz,
   - wideo kamery STRL prosto z ZIP-a (bez rozpakowywania 3,5 GB), dekodowane OD POCZĄTKU, bo w tych
@@ -9,10 +9,7 @@ Dla każdego ZIP-a (np. SPEAKER14_C1.zip):
   - zapis modality_npz\\SPEAKER14\\SPEAKER14_C1_017_OPEN.npz: video (T,96,96) uint8, audio (T*640,) float32,
     audio_lapt (T*640,) float32, usta_pkt (T,40,2), wykryto (T,), slowo, mowca, sesja, warunki, zbior,
     poczatek_slowa / koniec_slowa (w klatkach od początku klipu), meta (json),
-  - plik SPEAKER14_C1.done = sesja gotowa, przy ponownym uruchomieniu pomijana.
 
-Użycie (z folderu Dane, w środowisku avsr):
-    python przetworz_modality.py --dane modality --out modality_npz
 Wymagania: ffmpeg w PATH, numpy, opencv-python, "mediapipe==0.10.14".
 """
 import argparse
@@ -26,11 +23,11 @@ from pathlib import Path
 import numpy as np
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import common_functions as cf   # noqa: E402
+import common_functions as cf  
 
-W, H = 540, 960                 # połowa rozdzielczości pionowego wideo 1080x1920
+W, H = 540, 960                 
 KAMERA, MIKROFON = "STRL", "AUD1"
-PAD = 0.6                       # margines [s]: wokół środka każdego słowa mieści się okno 29 klatek jak w LRW
+PAD = 0.6                   
 
 
 def subfile_url(zpath, name):
@@ -95,7 +92,6 @@ def process_zip(zpath, outroot, errlog):
     outdir = outroot / mowca
     outdir.mkdir(parents=True, exist_ok=True)
     pick = lambda suffix: next(n for n in names if n.upper().endswith(suffix))
-    # okna słów w klatkach 25 kl./s (słowo + margines PAD z każdej strony)
     wins = [dict(i=i, s=s, e=e, w=w, k0=max(0, int(np.floor((s - PAD) * cf.FPS))), k1=int(np.ceil((e + PAD) * cf.FPS)),
                  path=outdir / f"{sid}_{i:03d}_{re.sub(r'[^A-Za-z0-9]+', '_', w).strip('_') or 'X'}.npz")
             for i, (s, e, w) in enumerate(read_lab(zf, labs[0]))]
@@ -117,7 +113,7 @@ def process_zip(zpath, outroot, errlog):
 def run_session(url, todo, aud, lapt, errlog, info):
     """Dekoduje wideo od początku i zapisuje słowa, gdy tylko ich okno się skończy.
     W pamięci trzyma tylko klatki z okien, które jeszcze nie zostały zapisane."""
-    buf = {}                       # numer klatki -> (obraz, punkty twarzy albo None)
+    buf = {}                      
     pending, rates = list(todo), []
     stop_k = max(x["k1"] for x in todo)
 
@@ -136,7 +132,7 @@ def run_session(url, todo, aud, lapt, errlog, info):
                 del buf[j]
         if k >= stop_k:
             break
-    for x in pending:                  # nagranie skończyło się wcześniej niż okno słowa
+    for x in pending:                
         zamknij(x)
     return rates
 
@@ -183,7 +179,7 @@ def main():
         print(f"{zp.name}: przetwarzam...", flush=True)
         try:
             r = process_zip(zp, outroot, outroot / "ffmpeg_bledy.log")
-        except Exception as e:          # jeden zepsuty ZIP nie zatrzymuje reszty
+        except Exception as e:         
             r = {"sesja": zp.stem, "status": f"BŁĄD: {type(e).__name__}: {e}"}
         print("   ", r, flush=True)
 

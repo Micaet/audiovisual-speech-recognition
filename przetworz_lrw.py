@@ -1,8 +1,8 @@
 """
-Przetwarza LRW (lipread_mp4, wszystkie słowa i części train/val/test) na pliki .npz
+Przetwarza LRW na pliki .npz
 w tym samym formacie co MODALITY i Oulu.
 
-Dla każdego klipu (lrw\\lipread_mp4\\ABOUT\\train\\ABOUT_00001.mp4 + .txt):
+Dla każdego klipu:
   - wideo 29 klatek 256x256, 25 kl./s (OpenCV) -> wycinek ust 96x96 (common_functions),
   - dźwięk PyAV -> mono 16 kHz, filtr górnoprzepustowy 80 Hz, int16,
   - granice słowa z pola "Duration" w .txt (słowo jest w środku klipu),
@@ -10,9 +10,6 @@ Dla każdego klipu (lrw\\lipread_mp4\\ABOUT\\train\\ABOUT_00001.mp4 + .txt):
     usta_pkt (29,40,2), wykryto (29,), slowo, mowca ("nieznany"), zbior, zbior_danych ("LRW"),
     poczatek_slowa / koniec_slowa (w klatkach), meta (json).
 
-Użycie (z folderu Dane, w środowisku avsr):
-    python przetworz_lrw.py --lrw lrw\\lipread_mp4 --out lrw_npz
-Gotowe pliki i klipy z lrw_npz\\nieudane.txt są pomijane, więc można przerwać i uruchomić ponownie.
 Wymagania: numpy, scipy, opencv-python, "mediapipe==0.10.14", av==12.3.0 (PyAV).
 """
 import argparse
@@ -26,7 +23,7 @@ import numpy as np
 from scipy.signal import lfilter
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-import common_functions as cf   # noqa: E402
+import common_functions as cf 
 
 CZESCI = {"train": "trening", "val": "walidacja", "test": "test"}
 
